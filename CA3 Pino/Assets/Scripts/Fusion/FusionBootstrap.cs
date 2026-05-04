@@ -1,15 +1,15 @@
 using System.Threading.Tasks;
 using Fusion;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class FusionBootstrap : MonoBehaviour
 {
     [Header("Session")]
     [SerializeField] private string sessionName = "CA3_OutpostCapture";
 
-    [Header("Spawner")]
+    [Header("Spawners")]
     [SerializeField] private OutpostFusionPlayerSpawner playerSpawner;
+    [SerializeField] private OutpostNetworkWorldSpawner worldSpawner;
 
     private NetworkRunner activeRunner;
 
@@ -24,25 +24,24 @@ public class FusionBootstrap : MonoBehaviour
             return;
 
         GameObject runnerObject = new GameObject("NetworkRunner");
-        activeRunner = runnerObject.AddComponent<NetworkRunner>();
-        runnerObject.AddComponent<NetworkSceneManagerDefault>();
 
+        activeRunner = runnerObject.AddComponent<NetworkRunner>();
         activeRunner.ProvideInput = true;
 
         if (playerSpawner != null)
             playerSpawner.Initialise(activeRunner);
         else
-            Debug.LogWarning("[FusionBootstrap] No player spawner assigned.");
+            Debug.LogWarning("[FusionBootstrap] No OutpostFusionPlayerSpawner assigned.");
 
-        NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
-        sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex));
+        if (worldSpawner != null)
+            worldSpawner.Initialise(activeRunner);
+        else
+            Debug.LogWarning("[FusionBootstrap] No OutpostNetworkWorldSpawner assigned.");
 
         StartGameResult result = await activeRunner.StartGame(new StartGameArgs
         {
             GameMode = GameMode.Shared,
-            SessionName = sessionName,
-            Scene = sceneInfo,
-            SceneManager = activeRunner.GetComponent<NetworkSceneManagerDefault>()
+            SessionName = sessionName
         });
 
         if (!result.Ok)
