@@ -4,7 +4,8 @@ public enum OutpostTeam
 {
     None,
     Blue,
-    Red
+    Red,
+    Neutral
 }
 
 public class OutpostPlayerTeam : MonoBehaviour

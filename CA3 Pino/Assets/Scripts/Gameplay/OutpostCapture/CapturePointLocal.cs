@@ -33,6 +33,7 @@ public class CapturePointLocal : MonoBehaviour
 
     private readonly HashSet<OutpostPlayerTeam> bluePlayersInside = new();
     private readonly HashSet<OutpostPlayerTeam> redPlayersInside = new();
+    private readonly HashSet<OutpostPlayerTeam> neutralPlayersInside = new();
 
     private OutpostTeam owner = OutpostTeam.None;
     private OutpostTeam capturingTeam = OutpostTeam.None;
@@ -44,6 +45,7 @@ public class CapturePointLocal : MonoBehaviour
     private bool matchFinished;
 
     private bool IsLocked => startsLocked && unlockTimer < unlockDelay;
+    private bool IsNeutralContestActive => neutralPlayersInside.Count > 0;
 
     private void Start()
     {
@@ -84,9 +86,10 @@ public class CapturePointLocal : MonoBehaviour
 
         if (playerTeam.Team == OutpostTeam.Blue)
             bluePlayersInside.Add(playerTeam);
-
-        if (playerTeam.Team == OutpostTeam.Red)
+        else if (playerTeam.Team == OutpostTeam.Red)
             redPlayersInside.Add(playerTeam);
+        else if (playerTeam.Team == OutpostTeam.Neutral)
+            neutralPlayersInside.Add(playerTeam);
 
         UpdateVisuals();
     }
@@ -100,6 +103,7 @@ public class CapturePointLocal : MonoBehaviour
 
         bluePlayersInside.Remove(playerTeam);
         redPlayersInside.Remove(playerTeam);
+        neutralPlayersInside.Remove(playerTeam);
 
         UpdateVisuals();
     }
@@ -107,6 +111,15 @@ public class CapturePointLocal : MonoBehaviour
     private void UpdateOwnerScore()
     {
         if (owner == OutpostTeam.None)
+            return;
+
+        if (IsNeutralContestActive)
+            return;
+
+        bool bluePresent = bluePlayersInside.Count > 0;
+        bool redPresent = redPlayersInside.Count > 0;
+
+        if (bluePresent && redPresent)
             return;
 
         float scoreGain = Time.deltaTime / scoreDuration;
@@ -122,6 +135,9 @@ public class CapturePointLocal : MonoBehaviour
     {
         bool bluePresent = bluePlayersInside.Count > 0;
         bool redPresent = redPlayersInside.Count > 0;
+
+        if (IsNeutralContestActive)
+            return;
 
         if (bluePresent && redPresent)
             return;
@@ -224,6 +240,12 @@ public class CapturePointLocal : MonoBehaviour
         bool bluePresent = bluePlayersInside.Count > 0;
         bool redPresent = redPlayersInside.Count > 0;
 
+        if (IsNeutralContestActive)
+        {
+            statusText.text = "GUARD CONTESTING";
+            return;
+        }
+
         if (bluePresent && redPresent)
         {
             statusText.text = "CONTESTED";
@@ -282,9 +304,14 @@ public class CapturePointLocal : MonoBehaviour
         if (captureLight == null)
             return;
 
-        captureLight.enabled = owner != OutpostTeam.None || capturingTeam != OutpostTeam.None;
+        captureLight.enabled =
+            owner != OutpostTeam.None ||
+            capturingTeam != OutpostTeam.None ||
+            IsNeutralContestActive;
 
-        if (owner == OutpostTeam.Blue || capturingTeam == OutpostTeam.Blue)
+        if (IsNeutralContestActive)
+            captureLight.color = Color.yellow;
+        else if (owner == OutpostTeam.Blue || capturingTeam == OutpostTeam.Blue)
             captureLight.color = Color.blue;
         else if (owner == OutpostTeam.Red || capturingTeam == OutpostTeam.Red)
             captureLight.color = Color.red;
