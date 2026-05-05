@@ -7806,7 +7806,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1167577155
 Transform:
   m_ObjectHideFlags: 0
@@ -9171,7 +9171,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FusionBootstrap
   sessionName: CA3_OutpostCapture
   playerSpawner: {fileID: 1472084010}
-  worldSpawner: {fileID: 0}
+  worldSpawner: {fileID: 2055763458}
 --- !u!4 &1368198404
 Transform:
   m_ObjectHideFlags: 0
@@ -9480,7 +9480,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1449112567
 Transform:
   m_ObjectHideFlags: 0
@@ -10177,37 +10177,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1569090237}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1601574680
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1601574681}
-  m_Layer: 0
-  m_Name: PlayerSpawn_Blue_01
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1601574681
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1601574680}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -44, y: 1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1825571196}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1602700828
 GameObject:
   m_ObjectHideFlags: 0
@@ -12588,7 +12557,7 @@ Transform:
   - {fileID: 66132171}
   - {fileID: 2085946167}
   - {fileID: 266811037}
-  - {fileID: 1601574681}
+  - {fileID: 525224194044276998}
   - {fileID: 1331772945}
   m_Father: {fileID: 592264851}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -14364,6 +14333,59 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2049275774}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2055763457
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2055763459}
+  - component: {fileID: 2055763458}
+  m_Layer: 0
+  m_Name: OutpostNetworkWorldSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2055763458
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2055763457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73831c95b3133e04db8e5629efca15b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutpostNetworkWorldSpawner
+  capturePointPrefab:
+    RawGuidValue: 4ded6f115a7894a48a9bce90eac4f38d
+  guardPrefab:
+    RawGuidValue: 0744da39ce88a924596951a58e6acdc4
+  capturePointPosition: {x: 0, y: 0.8, z: -14}
+  guardPosition: {x: 0, y: 1, z: -5}
+  requireSharedModeMaster: 1
+  spawnDelaySeconds: 0.5
+  logDebug: 1
+--- !u!4 &2055763459
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2055763457}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.40171, y: 0, z: -3.92179}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2059407420
 GameObject:
   m_ObjectHideFlags: 0
@@ -15099,87 +15121,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2147473007}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1001 &2502947301181007444
-PrefabInstance:
+--- !u!4 &525224194044276998
+Transform:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6757906635497154654}
   serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3984042422239686086, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_Name
-      value: NetworkedNeutralGuard
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4888783586968151276, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5666296613200016612, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: SortKey
-      value: 2557092190
-      objectReference: {fileID: 0}
-    - target: {fileID: 7146373948620366763, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: patrolPoints.Array.size
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 7146373948620366763, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: 'patrolPoints.Array.data[0]'
-      value: 
-      objectReference: {fileID: 317004545}
-    - target: {fileID: 7146373948620366763, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: 'patrolPoints.Array.data[1]'
-      value: 
-      objectReference: {fileID: 785960366}
-    - target: {fileID: 7146373948620366763, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: 'patrolPoints.Array.data[2]'
-      value: 
-      objectReference: {fileID: 188102213}
-    - target: {fileID: 7146373948620366763, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
-      propertyPath: 'patrolPoints.Array.data[3]'
-      value: 
-      objectReference: {fileID: 43588031}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0744da39ce88a924596951a58e6acdc4, type: 3}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -44, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1825571196}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6757906635497154654
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 525224194044276998}
+  m_Layer: 0
+  m_Name: PlayerSpawn_Blue_01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -15192,4 +15164,4 @@ SceneRoots:
   - {fileID: 1133068260}
   - {fileID: 1368198404}
   - {fileID: 1472084011}
-  - {fileID: 2502947301181007444}
+  - {fileID: 2055763459}
