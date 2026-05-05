@@ -100,10 +100,6 @@ public class OutpostFusionPlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
                 yield break;
 
             spawnedPlayer.transform.SetPositionAndRotation(spawnPosition, spawnRotation);
-
-            if (logDebug)
-                Debug.Log($"[OutpostFusionPlayerSpawner] Force spawn frame {i}: {spawnedPlayer.transform.position}");
-
             yield return null;
         }
     }
