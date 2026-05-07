@@ -34,7 +34,7 @@ Transform:
   m_GameObject: {fileID: 2204048698041821136}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -175,6 +175,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OutpostNetworkPlayer
   moveSpeed: 6
   gravity: -20
+  useCameraRelativeMovement: 1
+  rotateTowardsMovement: 1
+  rotationSpeed: 14
+  movementReferenceCamera: {fileID: 0}
+  fallbackCameraName: CA3_Recording_Camera
+  respawnOnNeutralGuardContact: 1
+  neutralGuardContactRadius: 1.8
+  respawnCooldownSeconds: 1.5
+  outOfBoundsY: -20
+  blueSpawnPoint: {fileID: 0}
+  redSpawnPoint: {fileID: 0}
+  fallbackBlueSpawnPosition: {x: -44, y: 1, z: 0}
+  fallbackRedSpawnPosition: {x: 44, y: 1, z: 0}
   bodyRenderer: {fileID: 5542030581258893853}
   blueMaterial: {fileID: 2100000, guid: 7bf9b846e9f0f3f4b8d9478ef5de2dbb, type: 2}
   redMaterial: {fileID: 2100000, guid: 7ad994f15575fe44dafffd001bf015f9, type: 2}

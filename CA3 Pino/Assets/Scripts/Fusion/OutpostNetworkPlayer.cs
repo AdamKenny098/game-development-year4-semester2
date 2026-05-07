@@ -11,6 +11,13 @@ public class OutpostNetworkPlayer : NetworkBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 6f;
     [SerializeField] private float gravity = -20f;
+    [SerializeField] private bool useCameraRelativeMovement = true;
+    [SerializeField] private bool rotateTowardsMovement = true;
+    [SerializeField] private float rotationSpeed = 14f;
+
+    [Header("Camera Reference")]
+    [SerializeField] private Camera movementReferenceCamera;
+    [SerializeField] private string fallbackCameraName = "CA3_Recording_Camera";
 
     [Header("Respawn")]
     [SerializeField] private bool respawnOnNeutralGuardContact = true;
@@ -51,6 +58,7 @@ public class OutpostNetworkPlayer : NetworkBehaviour
     public override void Spawned()
     {
         AutoFindSpawnPointsIfMissing();
+        AutoFindCameraIfMissing();
         UpdateVisuals();
     }
 
@@ -83,20 +91,78 @@ public class OutpostNetworkPlayer : NetworkBehaviour
         if (!GetInput(out FusionInputData input))
             return;
 
-        Vector3 move = new Vector3(input.Move.x, 0f, input.Move.y);
+        Vector3 horizontalMove = useCameraRelativeMovement
+            ? GetCameraRelativeMove(input.Move)
+            : new Vector3(input.Move.x, 0f, input.Move.y);
 
-        if (move.sqrMagnitude > 1f)
-            move.Normalize();
+        if (horizontalMove.sqrMagnitude > 1f)
+            horizontalMove.Normalize();
+
+        if (rotateTowardsMovement && horizontalMove.sqrMagnitude > 0.001f)
+            RotateTowards(horizontalMove);
 
         if (controller.isGrounded && verticalVelocity < 0f)
             verticalVelocity = -2f;
 
         verticalVelocity += gravity * Runner.DeltaTime;
 
-        Vector3 finalMove = move * moveSpeed;
+        Vector3 finalMove = horizontalMove * moveSpeed;
         finalMove.y = verticalVelocity;
 
         controller.Move(finalMove * Runner.DeltaTime);
+    }
+
+    private Vector3 GetCameraRelativeMove(Vector2 inputMove)
+    {
+        AutoFindCameraIfMissing();
+
+        if (movementReferenceCamera == null)
+            return new Vector3(inputMove.x, 0f, inputMove.y);
+
+        Vector3 cameraForward = movementReferenceCamera.transform.forward;
+        Vector3 cameraRight = movementReferenceCamera.transform.right;
+
+        cameraForward.y = 0f;
+        cameraRight.y = 0f;
+
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        Vector3 move =
+            cameraRight * inputMove.x +
+            cameraForward * inputMove.y;
+
+        return move;
+    }
+
+    private void RotateTowards(Vector3 moveDirection)
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Runner.DeltaTime
+        );
+    }
+
+    private void AutoFindCameraIfMissing()
+    {
+        if (movementReferenceCamera != null)
+            return;
+
+        GameObject namedCamera = GameObject.Find(fallbackCameraName);
+
+        if (namedCamera != null)
+        {
+            movementReferenceCamera = namedCamera.GetComponent<Camera>();
+
+            if (movementReferenceCamera != null)
+                return;
+        }
+
+        if (Camera.main != null)
+            movementReferenceCamera = Camera.main;
     }
 
     private void CheckNeutralGuardContact()

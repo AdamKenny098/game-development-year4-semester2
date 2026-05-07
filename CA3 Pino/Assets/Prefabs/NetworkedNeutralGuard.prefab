@@ -94,7 +94,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d112fbc249a9c86458aed16fa58951ad, type: 2}
+  - {fileID: 2100000, guid: dcb39959d1e0a95488231dd591544f98, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -238,8 +238,8 @@ MonoBehaviour:
   detectionRadius: 10
   loseTargetRadius: 16
   playerNearPointDistance: 8
-  patrolSpeed: 4
-  chaseSpeed: 6.5
+  patrolSpeed: 6
+  chaseSpeed: 10
   contestSpeed: 3
   patrolStoppingDistance: 0.1
   chaseStoppingDistance: 1.4
