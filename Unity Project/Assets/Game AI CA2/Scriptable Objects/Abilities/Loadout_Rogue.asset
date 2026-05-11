@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 044b1230418f27343ad15cd3f78a6529, type: 3}
+  m_Name: Loadout_Rogue
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityLoadout
+  primary: {fileID: 11400000, guid: be84a34e4d582f64aae0332b3663c079, type: 2}
+  secondary: {fileID: 11400000, guid: 0def03458413d394cbef0b005aca0c2c, type: 2}
+  unlock1: {fileID: 11400000, guid: 333039fee91714e4ba0659c974f61fd9, type: 2}
+  unlock2: {fileID: 11400000, guid: 327669f25310cbb438ae6d4b1d226e6c, type: 2}
+  unlock3: {fileID: 11400000, guid: 3b1791fbca27bb74087a54d047214e1a, type: 2}

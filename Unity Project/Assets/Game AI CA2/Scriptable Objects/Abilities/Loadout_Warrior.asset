@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 044b1230418f27343ad15cd3f78a6529, type: 3}
+  m_Name: Loadout_Warrior
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityLoadout
+  primary: {fileID: 11400000, guid: 134763cebf9be3d4c9bdad81437f766c, type: 2}
+  secondary: {fileID: 11400000, guid: 4da8764bd394e4b4d83d6c8c354776e7, type: 2}
+  unlock1: {fileID: 11400000, guid: 85281adce14fd754fad7b51a8251ae97, type: 2}
+  unlock2: {fileID: 11400000, guid: da4d5831e8aeb1149bcbaedad4bb344a, type: 2}
+  unlock3: {fileID: 11400000, guid: 016e13f304a02e44d8fff5096986443b, type: 2}
