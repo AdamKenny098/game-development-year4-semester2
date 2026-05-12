@@ -12,44 +12,203 @@ public class PatrolStateAction : Action
 {
     [SerializeReference] public BlackboardVariable<State> AIState;
     [SerializeReference] public BlackboardVariable<GameObject> Agent;
-    NavMeshAgent nav;
-    PatrolPoints patrol;
-    int index;
-    Animator anim;
+    [SerializeReference] public BlackboardVariable<List<Vector3>> Waypoints;
+
+    [SerializeField] private float waitAtPoint = 0.5f;
+    [SerializeField] private bool startAtNearestPoint = true;
+
+    private NavMeshAgent nav;
+    private Animator anim;
+
+    private int index;
+    private float waitTimer;
+    private bool waiting;
 
     protected override Status OnStart()
     {
-        if (Agent.Value == null)
+        if (Agent == null || Agent.Value == null)
+        {
             return Status.Failure;
+        }
 
         nav = Agent.Value.GetComponent<NavMeshAgent>();
-        patrol = Agent.Value.GetComponent<PatrolPoints>();
         anim = Agent.Value.GetComponent<Animator>();
 
-        if (nav == null || patrol == null || patrol.points.Count == 0)
+        if (nav == null)
+        {
             return Status.Failure;
+        }
 
+        if (!nav.isOnNavMesh)
+        {
+            return Status.Failure;
+        }
+
+        if (Waypoints == null || Waypoints.Value == null || Waypoints.Value.Count == 0)
+        {
+            return Status.Failure;
+        }
+
+        if (AIState != null)
+        {
+            AIState.Value = State.Patrol;
+        }
+
+        waiting = false;
+        waitTimer = 0f;
         nav.isStopped = false;
-        index = 0;
-        nav.SetDestination(patrol.points[index]);
-        anim.SetFloat("Speed", 0.5f);
+
+        if (startAtNearestPoint)
+        {
+            index = GetNearestWaypointIndex();
+        }
+        else
+        {
+            index = Mathf.Clamp(index, 0, Waypoints.Value.Count - 1);
+        }
+
+        SetDestinationToCurrentWaypoint();
+
+        if (anim != null)
+        {
+            anim.SetFloat("Speed", 0.5f);
+        }
 
         return Status.Running;
     }
 
     protected override Status OnUpdate()
     {
-        if (AIState.Value != State.Patrol)
+        if (nav == null)
         {
-            nav.ResetPath();
             return Status.Failure;
         }
 
-        if (!nav.pathPending && nav.remainingDistance <= nav.stoppingDistance)
+        if (Waypoints == null || Waypoints.Value == null || Waypoints.Value.Count == 0)
         {
-            index = (index + 1) % patrol.points.Count;
-            nav.SetDestination(patrol.points[index]);
+            return Status.Failure;
         }
+
+        if (!nav.isOnNavMesh)
+        {
+            return Status.Failure;
+        }
+
+        if (waiting)
+        {
+            waitTimer -= Time.deltaTime;
+
+            if (waitTimer <= 0f)
+            {
+                waiting = false;
+                MoveToNextWaypoint();
+            }
+
+            return Status.Running;
+        }
+
+        if (HasReachedDestination())
+        {
+            waiting = true;
+            waitTimer = waitAtPoint;
+
+            nav.isStopped = true;
+
+            if (anim != null)
+            {
+                anim.SetFloat("Speed", 0f);
+            }
+        }
+
         return Status.Running;
+    }
+
+    protected override void OnEnd()
+    {
+        if (nav != null)
+        {
+            nav.isStopped = true;
+            nav.ResetPath();
+        }
+
+        if (anim != null)
+        {
+            anim.SetFloat("Speed", 0f);
+        }
+    }
+
+    private void MoveToNextWaypoint()
+    {
+        index = (index + 1) % Waypoints.Value.Count;
+
+        nav.isStopped = false;
+        SetDestinationToCurrentWaypoint();
+
+        if (anim != null)
+        {
+            anim.SetFloat("Speed", 0.5f);
+        }
+}
+
+    private void SetDestinationToCurrentWaypoint()
+    {
+        Vector3 destination = Waypoints.Value[index];
+
+        if (NavMesh.SamplePosition(destination, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+        {
+            nav.SetDestination(hit.position);
+        }
+        else
+        {
+            nav.SetDestination(destination);
+        }
+    }
+
+    private bool HasReachedDestination()
+    {
+        if (nav.pathPending)
+        {
+            return false;
+        }
+
+        if (nav.pathStatus == NavMeshPathStatus.PathInvalid)
+        {
+            MoveToNextWaypoint();
+            return false;
+        }
+
+        if (nav.remainingDistance > nav.stoppingDistance)
+        {
+            return false;
+        }
+
+        if (nav.hasPath && nav.velocity.sqrMagnitude > 0.01f)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private int GetNearestWaypointIndex()
+    {
+        int nearestIndex = 0;
+        float nearestDistance = float.MaxValue;
+
+        for (int i = 0; i < Waypoints.Value.Count; i++)
+        {
+            float distance = Vector3.Distance(
+                Agent.Value.transform.position,
+                Waypoints.Value[i]
+            );
+
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearestIndex = i;
+            }
+        }
+
+        return nearestIndex;
     }
 }
