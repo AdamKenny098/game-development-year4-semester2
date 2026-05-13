@@ -1,11 +1,16 @@
 using System;
 using Unity.Behavior;
+using Unity.Properties;
 using UnityEngine;
 using Action = Unity.Behavior.Action;
-using Unity.Properties;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "Hearing", story: "Detects nearby Audio sources", category: "Action", id: "bc709b4ddc97364aa346fd3c1941bb73")]
+[NodeDescription(
+    name: "Hearing",
+    story: "[Agent] listens for [Player]",
+    category: "Action",
+    id: "bc709b4ddc97364aa346fd3c1941bb73"
+)]
 public partial class HearingAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Agent;
@@ -66,26 +71,22 @@ public partial class HearingAction : Action
                 HasLastHeardNoisePosition.Value = true;
 
             lastHeardTime = Time.time;
-
             Debug.DrawLine(agentTransform.position, playerTransform.position, Color.yellow, 0.05f);
+
+            if (LastHeardNoisePosition != null)
+                TyrantOverlayReporter.Instance?.ReportLastHeardNoisePosition(LastHeardNoisePosition.Value);
         }
         else
         {
             bool memoryExpired = Time.time - lastHeardTime > memoryTime;
 
-            if (memoryExpired)
-            {
-                if (HearsNoise != null)
-                    HearsNoise.Value = false;
-            }
+            if (memoryExpired && HearsNoise != null)
+                HearsNoise.Value = false;
         }
 
-        OverlayBT.Instance?.SetPerception(
-            hearsNoise: HearsNoise != null && HearsNoise.Value
-        );
-
-        OverlayBT.Instance?.SetTracking(
-            lastHeardNoisePos: LastHeardNoisePosition != null ? LastHeardNoisePosition.Value : (Vector3?)null
+        TyrantOverlayReporter.Instance?.ReportHearing(
+            HearsNoise != null && HearsNoise.Value,
+            HasLastHeardNoisePosition != null && HasLastHeardNoisePosition.Value
         );
 
         return Status.Running;

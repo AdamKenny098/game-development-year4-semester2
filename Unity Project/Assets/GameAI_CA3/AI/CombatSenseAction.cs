@@ -1,11 +1,16 @@
 using System;
 using Unity.Behavior;
+using Unity.Properties;
 using UnityEngine;
 using Action = Unity.Behavior.Action;
-using Unity.Properties;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "CombatSense", story: "Detects whether or not you can attack", category: "Action", id: "9c3377e3b41b9552654210636a944312")]
+[NodeDescription(
+    name: "CombatSense",
+    story: "[Self] checks if the player is in attack range",
+    category: "Action",
+    id: "9c3377e3b41b9552654210636a944312"
+)]
 public partial class CombatSenseAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Self;
@@ -61,10 +66,7 @@ public partial class CombatSenseAction : Action
 
         SetCombatValues(inRange, canAttack);
 
-        OverlayBT.Instance?.SetCombat(
-            isInRange: inRange,
-            canAttack: canAttack
-        );
+        TyrantOverlayReporter.Instance?.ReportCombat(inRange, canAttack, false);
 
         return Status.Running;
     }
@@ -77,6 +79,16 @@ public partial class CombatSenseAction : Action
 
             if (PlayerTransform != null)
                 PlayerTransform.Value = playerTransform;
+
+            return;
+        }
+
+        if (PlayerTransform != null && PlayerTransform.Value != null)
+        {
+            playerTransform = PlayerTransform.Value;
+
+            if (Player != null)
+                Player.Value = playerTransform.gameObject;
 
             return;
         }

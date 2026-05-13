@@ -1,24 +1,27 @@
 using System;
 using Unity.Behavior;
-using UnityEngine;
-using Action = Unity.Behavior.Action;
 using Unity.Properties;
+using UnityEngine;
 using UnityEngine.AI;
+using Action = Unity.Behavior.Action;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "TyrantChase", story: "tyrant chases", category: "Action", id: "d6fb9bf06a94568a1ff4ddee28f68745")]
+[NodeDescription(
+    name: "TyrantChase",
+    story: "Tyrant chases the player",
+    category: "Action",
+    id: "d6fb9bf06a94568a1ff4ddee28f68745"
+)]
 public partial class TyrantChaseAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Self;
     [SerializeReference] public BlackboardVariable<GameObject> Player;
-
     [SerializeReference] public BlackboardVariable<State> AIState;
 
     [SerializeReference] public BlackboardVariable<Transform> CurrentTarget;
     [SerializeReference] public BlackboardVariable<Transform> PlayerTransform;
 
     [SerializeReference] public BlackboardVariable<bool> CanSeePlayer;
-
     [SerializeReference] public BlackboardVariable<Vector3> LastKnownPlayerPosition;
     [SerializeReference] public BlackboardVariable<bool> HasLastKnownPlayerPosition;
 
@@ -90,6 +93,10 @@ public partial class TyrantChaseAction : Action
         if (animator != null)
             animator.SetFloat("Speed", agent.velocity.magnitude);
 
+        TyrantOverlayReporter.Instance?.ReportBehaviour(State.Chase, "Chase", "Move To Player");
+        TyrantOverlayReporter.Instance?.ReportTarget(target);
+        TyrantOverlayReporter.Instance?.ReportLastKnownPlayerPosition(target.position);
+
         return Status.Running;
     }
 
@@ -97,9 +104,6 @@ public partial class TyrantChaseAction : Action
     {
         if (animator != null)
             animator.SetFloat("Speed", 0f);
-
-        // Do not ResetPath here.
-        // Brain/Switch may move to Search or Attack next.
     }
 
     private Transform GetTarget()

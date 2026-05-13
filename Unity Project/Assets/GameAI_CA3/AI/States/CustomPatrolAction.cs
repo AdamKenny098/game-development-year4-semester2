@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
 using Unity.Behavior;
-using UnityEngine;
-using Action = Unity.Behavior.Action;
 using Unity.Properties;
+using UnityEngine;
 using UnityEngine.AI;
+using Action = Unity.Behavior.Action;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "CustomPatrolAction", story: "[Target] patrols [points]", category: "Action", id: "573d3f416e28e1aaafb275c9e77c15c3")]
+[NodeDescription(
+    name: "CustomPatrolAction",
+    story: "[Agent] patrols through [Waypoints]",
+    category: "Action",
+    id: "573d3f416e28e1aaafb275c9e77c15c3"
+)]
 public class PatrolStateAction : Action
 {
     [SerializeReference] public BlackboardVariable<State> AIState;
@@ -41,10 +46,9 @@ public class PatrolStateAction : Action
 
         if (!initialised)
         {
-            if (startAtNearestPoint)
-                index = GetNearestWaypointIndex();
-            else
-                index = Mathf.Clamp(index, 0, Waypoints.Value.Count - 1);
+            index = startAtNearestPoint
+                ? GetNearestWaypointIndex()
+                : Mathf.Clamp(index, 0, Waypoints.Value.Count - 1);
 
             waiting = false;
             waitTimer = 0f;
@@ -64,6 +68,7 @@ public class PatrolStateAction : Action
         if (Waypoints == null || Waypoints.Value == null || Waypoints.Value.Count == 0)
             return Status.Failure;
 
+        TyrantOverlayReporter.Instance?.ReportBehaviour(State.Patrol, "Patrol", "Waypoint Patrol");
 
         if (waiting)
         {
@@ -79,15 +84,12 @@ public class PatrolStateAction : Action
         }
 
         if (!nav.hasPath && !nav.pathPending)
-        {
             SetDestinationToCurrentWaypoint();
-        }
 
         if (HasReachedDestination())
         {
             waiting = true;
             waitTimer = waitAtPoint;
-
             nav.isStopped = true;
 
             if (anim != null)
@@ -106,15 +108,12 @@ public class PatrolStateAction : Action
 
     protected override void OnEnd()
     {
-        // Intentionally empty.
-        // This action returns Success every tick so the Behaviour Graph can re-evaluate senses.
-        // Do not stop or reset the NavMeshAgent here, or patrol movement will be cancelled every tick.
+        // Intentionally empty. The Brain owns state decisions and the NavMeshAgent should keep moving.
     }
 
     private void MoveToNextWaypoint()
     {
         index = (index + 1) % Waypoints.Value.Count;
-
         nav.isStopped = false;
         SetDestinationToCurrentWaypoint();
 
@@ -159,10 +158,7 @@ public class PatrolStateAction : Action
 
         for (int i = 0; i < Waypoints.Value.Count; i++)
         {
-            float distance = Vector3.Distance(
-                Agent.Value.transform.position,
-                Waypoints.Value[i]
-            );
+            float distance = Vector3.Distance(Agent.Value.transform.position, Waypoints.Value[i]);
 
             if (distance < nearestDistance)
             {

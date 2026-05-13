@@ -6,17 +6,20 @@ using UnityEngine.AI;
 using Action = Unity.Behavior.Action;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "TyrantSearch", story: "Tyrant searches", category: "Action", id: "206858b67abf1eb771256fcc81850ed7")]
+[NodeDescription(
+    name: "TyrantSearch",
+    story: "Tyrant searches the last known position",
+    category: "Action",
+    id: "206858b67abf1eb771256fcc81850ed7"
+)]
 public partial class TyrantSearchAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Self;
     [SerializeReference] public BlackboardVariable<State> AIState;
 
     [SerializeReference] public BlackboardVariable<Vector3> SearchTargetPosition;
-
     [SerializeReference] public BlackboardVariable<bool> CanSeePlayer;
     [SerializeReference] public BlackboardVariable<bool> HearsNoise;
-
     [SerializeReference] public BlackboardVariable<bool> HasLastKnownPlayerPosition;
     [SerializeReference] public BlackboardVariable<bool> HasLastHeardNoisePosition;
 
@@ -46,7 +49,7 @@ public partial class TyrantSearchAction : Action
 
         BeginSearch();
 
-        return Status.Success;
+        return Status.Running;
     }
 
     protected override Status OnUpdate()
@@ -58,6 +61,9 @@ public partial class TyrantSearchAction : Action
             agent = Self.Value.GetComponent<NavMeshAgent>();
 
         if (agent == null || !agent.isOnNavMesh)
+            return Status.Failure;
+
+        if (AIState != null && AIState.Value != State.Search)
             return Status.Failure;
 
         if (CanSeePlayer != null && CanSeePlayer.Value)
@@ -84,33 +90,27 @@ public partial class TyrantSearchAction : Action
             else
             {
                 agent.isStopped = false;
+                agent.speed = searchSpeed;
                 agent.SetDestination(SearchTargetPosition.Value);
 
                 if (animator != null)
                     animator.SetFloat("Speed", agent.velocity.magnitude);
             }
 
-            if (AIState != null)
-            {
-                AIState.Value = State.Search;
-            }
+            TyrantOverlayReporter.Instance?.ReportBehaviour(State.Search, "Search", "Move To Search Target");
+            TyrantOverlayReporter.Instance?.ReportSearchTargetPosition(SearchTargetPosition.Value);
 
             return Status.Success;
         }
 
         searchTimer -= Time.deltaTime;
-
         Self.Value.transform.Rotate(Vector3.up, turnSpeed * Time.deltaTime);
 
         if (searchTimer <= 0f)
-        {
             FinishSearch();
-        }
 
-        if (AIState != null)
-        {
-            AIState.Value = State.Search;
-        }
+        TyrantOverlayReporter.Instance?.ReportBehaviour(State.Search, "Search", "Look Around");
+        TyrantOverlayReporter.Instance?.ReportSearchTargetPosition(SearchTargetPosition.Value);
 
         return Status.Success;
     }
@@ -126,9 +126,6 @@ public partial class TyrantSearchAction : Action
         hasStartedSearch = true;
         hasReachedSearchPoint = false;
         searchTimer = searchDuration;
-
-        if (AIState != null)
-            AIState.Value = State.Search;
 
         agent.isStopped = false;
         agent.speed = searchSpeed;
@@ -164,8 +161,13 @@ public partial class TyrantSearchAction : Action
         if (AIState != null)
             AIState.Value = State.Patrol;
 
-        agent.isStopped = false;
-        agent.ResetPath();
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.isStopped = false;
+            agent.ResetPath();
+        }
+
+        TyrantOverlayReporter.Instance?.ClearSearchMemory();
     }
 
     private bool HasReachedDestination()

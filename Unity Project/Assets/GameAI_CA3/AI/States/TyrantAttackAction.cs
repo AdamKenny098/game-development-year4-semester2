@@ -92,14 +92,14 @@ public partial class TyrantAttackAction : Action
         FaceTarget(target.position);
 
         if (!attackStarted && Time.time >= nextAttackTime)
-        {
             StartAttack();
-        }
 
         if (attackStarted && Time.time >= attackEndTime)
-        {
             EndAttackCycle();
-        }
+
+        TyrantOverlayReporter.Instance?.ReportBehaviour(State.Attack, "Attack", "Attack Player");
+        TyrantOverlayReporter.Instance?.ReportTarget(target);
+        TyrantOverlayReporter.Instance?.ReportCombat(inRange, canAttack, IsAttacking != null && IsAttacking.Value);
 
         return Status.Running;
     }

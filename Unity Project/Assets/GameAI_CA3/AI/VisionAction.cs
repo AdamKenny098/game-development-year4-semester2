@@ -1,11 +1,16 @@
 using System;
 using Unity.Behavior;
+using Unity.Properties;
 using UnityEngine;
 using Action = Unity.Behavior.Action;
-using Unity.Properties;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "Vision", story: "Calculating if Agent Can See [Player]", category: "Action", id: "7082f207e7e538659c549d5d6bbbe5f0")]
+[NodeDescription(
+    name: "Vision",
+    story: "[Agent] checks if it can see [Player]",
+    category: "Action",
+    id: "7082f207e7e538659c549d5d6bbbe5f0"
+)]
 public partial class VisionAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Agent;
@@ -54,26 +59,21 @@ public partial class VisionAction : Action
         if (playerTransform == null)
         {
             SetVisible(false);
+            TyrantOverlayReporter.Instance?.ReportVision(false, HasLastKnownPlayerPosition != null && HasLastKnownPlayerPosition.Value);
+            TyrantOverlayReporter.Instance?.ClearTarget();
             return Status.Running;
         }
 
         bool canSee = ComputeVision();
-
         SetVisible(canSee);
 
-        OverlayBT.Instance?.SetPerception(
-            canSeePlayer: canSee,
-            knowsLastPlayerPos: HasLastKnownPlayerPosition != null && HasLastKnownPlayerPosition.Value
-        );
+        bool hasLastKnown = HasLastKnownPlayerPosition != null && HasLastKnownPlayerPosition.Value;
 
-        OverlayBT.Instance?.SetTarget(
-            CurrentTarget != null ? CurrentTarget.Value : null,
-            hasTarget: CurrentTarget != null && CurrentTarget.Value != null
-        );
+        TyrantOverlayReporter.Instance?.ReportVision(canSee, hasLastKnown);
+        TyrantOverlayReporter.Instance?.ReportTarget(CurrentTarget != null ? CurrentTarget.Value : null);
 
-        OverlayBT.Instance?.SetTracking(
-            lastKnownPlayerPos: LastKnownPlayerPosition != null ? LastKnownPlayerPosition.Value : (Vector3?)null
-        );
+        if (canSee && LastKnownPlayerPosition != null)
+            TyrantOverlayReporter.Instance?.ReportLastKnownPlayerPosition(LastKnownPlayerPosition.Value);
 
         return Status.Running;
     }
