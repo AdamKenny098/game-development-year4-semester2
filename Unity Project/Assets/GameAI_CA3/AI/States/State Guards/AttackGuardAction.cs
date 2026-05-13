@@ -9,10 +9,22 @@ using Unity.Properties;
 public partial class AttackGuardAction : Action
 {
     [SerializeReference] public BlackboardVariable<State> AIState;
+    [SerializeReference] public BlackboardVariable<bool> CanAttack;
+    [SerializeReference] public BlackboardVariable<bool> IsInRange;
+    [SerializeReference] public BlackboardVariable<Transform> CurrentTarget;
 
     protected override Status OnUpdate()
     {
-        return AIState != null && AIState.Value == State.Attack ? Status.Success : Status.Failure;
+        bool hasTarget = CurrentTarget != null && CurrentTarget.Value != null;
+        bool inRange = IsInRange != null && IsInRange.Value;
+        bool canAttack = CanAttack != null && CanAttack.Value;
+
+        if (!hasTarget || !inRange || !canAttack)
+            return Status.Failure;
+
+        if (AIState != null)
+            AIState.Value = State.Attack;
+
+        return Status.Success;
     }
 }
-

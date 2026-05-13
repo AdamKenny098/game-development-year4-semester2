@@ -10,34 +10,50 @@ using Unity.Properties;
 public partial class SearchGuardAction : Action
 {
     [SerializeReference] public BlackboardVariable<State> AIState;
-    [SerializeReference] public BlackboardVariable<Transform> LastKnownPlayerTransform;
-    [SerializeReference] public BlackboardVariable<Transform> SoundPosition;
-    [SerializeReference] public BlackboardVariable<GameObject> Agent;
-    [SerializeReference] public BlackboardVariable<bool> IsSearching;
-    [SerializeReference] public BlackboardVariable<float> WalkSpeed;
 
-    NavMeshAgent nav;
+    [SerializeReference] public BlackboardVariable<bool> CanSeePlayer;
+    [SerializeReference] public BlackboardVariable<bool> HearsNoise;
 
-    protected override Status OnStart()
-    {
-        if (Agent?.Value == null)
-            return Status.Failure;
+    [SerializeReference] public BlackboardVariable<bool> HasLastKnownPlayerPosition;
+    [SerializeReference] public BlackboardVariable<Vector3> LastKnownPlayerPosition;
 
-        nav = Agent.Value.GetComponent<NavMeshAgent>();
-        nav.speed = WalkSpeed;
-        return Status.Running;
-    }
+    [SerializeReference] public BlackboardVariable<bool> HasLastHeardNoisePosition;
+    [SerializeReference] public BlackboardVariable<Vector3> LastHeardNoisePosition;
+
+    [SerializeReference] public BlackboardVariable<Vector3> SearchTargetPosition;
 
     protected override Status OnUpdate()
     {
-        if (AIState.Value != State.Search || !IsSearching.Value)
-        {
-            if (nav && nav.isOnNavMesh)
-                nav.ResetPath();
-
+        if (CanSeePlayer != null && CanSeePlayer.Value)
             return Status.Failure;
+
+        bool hasHeardNoise = HearsNoise != null && HearsNoise.Value;
+        bool hasNoisePosition = HasLastHeardNoisePosition != null && HasLastHeardNoisePosition.Value;
+
+        if (hasHeardNoise && hasNoisePosition)
+        {
+            if (SearchTargetPosition != null && LastHeardNoisePosition != null)
+                SearchTargetPosition.Value = LastHeardNoisePosition.Value;
+
+            if (AIState != null)
+                AIState.Value = State.Search;
+
+            return Status.Success;
         }
 
-        return Status.Success;
+        bool hasLastKnownPlayer = HasLastKnownPlayerPosition != null && HasLastKnownPlayerPosition.Value;
+
+        if (hasLastKnownPlayer)
+        {
+            if (SearchTargetPosition != null && LastKnownPlayerPosition != null)
+                SearchTargetPosition.Value = LastKnownPlayerPosition.Value;
+
+            if (AIState != null)
+                AIState.Value = State.Search;
+
+            return Status.Success;
+        }
+
+        return Status.Failure;
     }
 }

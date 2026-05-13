@@ -10,35 +10,41 @@ using Unity.Properties;
 public class ChaseGuardAction : Action
 {
     [SerializeReference] public BlackboardVariable<State> AIState;
-    [SerializeReference] public BlackboardVariable<GameObject> Agent;
-    [SerializeReference] public BlackboardVariable<Transform> Target;
-    [SerializeReference] public BlackboardVariable<bool> IsFleeing;
-    [SerializeReference] public BlackboardVariable<bool> ChaseLocked;
 
-    NavMeshAgent nav;
+    [SerializeReference] public BlackboardVariable<bool> CanSeePlayer;
 
-    protected override Status OnStart()
-    {
-        if (Agent.Value == null)
-            return Status.Failure;
-
-        nav = Agent.Value.GetComponent<NavMeshAgent>();
-        if (nav == null || !nav.isOnNavMesh)
-            return Status.Failure;
-        return Status.Running;
-    }
+    [SerializeReference] public BlackboardVariable<GameObject> Player;
+    [SerializeReference] public BlackboardVariable<Transform> PlayerTransform;
+    [SerializeReference] public BlackboardVariable<Transform> CurrentTarget;
 
     protected override Status OnUpdate()
     {
-        if (Agent.Value == null)
+        if (CanSeePlayer == null || !CanSeePlayer.Value)
             return Status.Failure;
 
-        if (IsFleeing != null && IsFleeing.Value)
+        Transform target = null;
+
+        if (CurrentTarget != null && CurrentTarget.Value != null)
+            target = CurrentTarget.Value;
+        else if (PlayerTransform != null && PlayerTransform.Value != null)
+            target = PlayerTransform.Value;
+        else if (Player != null && Player.Value != null)
+            target = Player.Value.transform;
+
+        if (target == null)
             return Status.Failure;
-        if (ChaseLocked != null && ChaseLocked.Value)
-            return Status.Failure;
-        if (AIState == null || AIState.Value != State.Chase)
-            return Status.Failure;
+
+        if (CurrentTarget != null)
+            CurrentTarget.Value = target;
+
+        if (PlayerTransform != null)
+            PlayerTransform.Value = target;
+
+        if (Player != null)
+            Player.Value = target.gameObject;
+
+        if (AIState != null)
+            AIState.Value = State.Chase;
 
         return Status.Success;
     }

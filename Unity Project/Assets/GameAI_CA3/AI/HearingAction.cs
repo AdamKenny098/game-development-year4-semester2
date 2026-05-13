@@ -9,72 +9,129 @@ using Unity.Properties;
 public partial class HearingAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Agent;
+    [SerializeReference] public BlackboardVariable<GameObject> Player;
+    [SerializeReference] public BlackboardVariable<Transform> PlayerTransform;
+
     [SerializeReference] public BlackboardVariable<bool> HearsNoise;
     [SerializeReference] public BlackboardVariable<Vector3> LastHeardNoisePosition;
+    [SerializeReference] public BlackboardVariable<bool> HasLastHeardNoisePosition;
 
-    public float hearingRadius = 30f;
+    [Header("Hearing Settings")]
+    public float hearingRadius = 8f;
     public float memoryTime = 3f;
+    public bool requireNoiseFlag = false;
 
-    float lastHeardTime;
+    [Tooltip("Optional. If assigned, hearing only triggers when this Blackboard bool is true.")]
+    [SerializeReference] public BlackboardVariable<bool> PlayerIsMakingNoise;
+
+    private Transform agentTransform;
+    private Transform playerTransform;
+    private float lastHeardTime;
+
+    protected override Status OnStart()
+    {
+        if (Agent == null || Agent.Value == null)
+            return Status.Failure;
+
+        agentTransform = Agent.Value.transform;
+        ResolvePlayer();
+
+        return Status.Running;
+    }
 
     protected override Status OnUpdate()
     {
-        if (Agent?.Value == null)
-            return Status.Running;
+        if (Agent == null || Agent.Value == null)
+            return Status.Failure;
 
-        bool heard = ScanForAudio();
+        if (agentTransform == null)
+            agentTransform = Agent.Value.transform;
 
-        OverlayBT.Instance?.SetPerception(
-            hearsNoise: heard
-        );
+        ResolvePlayer();
 
-        OverlayBT.Instance?.SetTracking(
-            lastHeardNoisePos: LastHeardNoisePosition != null ? LastHeardNoisePosition.Value : (Vector3?)null
-        );
+        bool heard = false;
+
+        if (playerTransform != null)
+            heard = ComputeHearing();
 
         if (heard)
         {
             if (HearsNoise != null)
                 HearsNoise.Value = true;
 
+            if (LastHeardNoisePosition != null)
+                LastHeardNoisePosition.Value = playerTransform.position;
+
+            if (HasLastHeardNoisePosition != null)
+                HasLastHeardNoisePosition.Value = true;
+
             lastHeardTime = Time.time;
-            return Status.Running;
+
+            Debug.DrawLine(agentTransform.position, playerTransform.position, Color.yellow, 0.05f);
+        }
+        else
+        {
+            bool memoryExpired = Time.time - lastHeardTime > memoryTime;
+
+            if (memoryExpired)
+            {
+                if (HearsNoise != null)
+                    HearsNoise.Value = false;
+            }
         }
 
-        if (HearsNoise != null && HearsNoise.Value && Time.time - lastHeardTime > memoryTime)
-            HearsNoise.Value = false;
+        OverlayBT.Instance?.SetPerception(
+            hearsNoise: HearsNoise != null && HearsNoise.Value
+        );
+
+        OverlayBT.Instance?.SetTracking(
+            lastHeardNoisePos: LastHeardNoisePosition != null ? LastHeardNoisePosition.Value : (Vector3?)null
+        );
 
         return Status.Running;
     }
 
-    bool ScanForAudio()
+    private void ResolvePlayer()
     {
-        Collider[] hits = Physics.OverlapSphere(
-            Agent.Value.transform.position,
-            hearingRadius
-        );
-
-        foreach (Collider hit in hits)
+        if (Player != null && Player.Value != null)
         {
-            AudioSource audio = hit.GetComponentInChildren<AudioSource>();
-            if (audio == null || !audio.isPlaying)
-                continue;
-
-            if (LastHeardNoisePosition != null)
-                LastHeardNoisePosition.Value = audio.transform.position;
-
-            Debug.DrawLine(
-                Agent.Value.transform.position,
-                audio.transform.position,
-                Color.yellow,
-                0.1f
-            );
-
-            Debug.Log($"[Hearing] Heard sound from {audio.gameObject.name} at {audio.transform.position}");
-
-            return true;
+            playerTransform = Player.Value.transform;
+            return;
         }
 
-        return false;
+        if (PlayerTransform != null && PlayerTransform.Value != null)
+        {
+            playerTransform = PlayerTransform.Value;
+
+            if (Player != null)
+                Player.Value = playerTransform.gameObject;
+
+            return;
+        }
+
+        GameObject foundPlayer = GameObject.FindGameObjectWithTag("Player");
+
+        if (foundPlayer == null)
+            return;
+
+        playerTransform = foundPlayer.transform;
+
+        if (Player != null)
+            Player.Value = foundPlayer;
+
+        if (PlayerTransform != null)
+            PlayerTransform.Value = playerTransform;
+    }
+
+    private bool ComputeHearing()
+    {
+        if (requireNoiseFlag)
+        {
+            if (PlayerIsMakingNoise == null || !PlayerIsMakingNoise.Value)
+                return false;
+        }
+
+        float distance = Vector3.Distance(agentTransform.position, playerTransform.position);
+        return distance <= hearingRadius;
     }
 }

@@ -10,28 +10,11 @@ using UnityEngine.AI;
 public class PatrolGuardAction : Action
 {
     [SerializeReference] public BlackboardVariable<State> AIState;
-    [SerializeReference] public BlackboardVariable<GameObject> Agent;
-    [SerializeReference] public BlackboardVariable<float> WalkSpeed;
-
-    NavMeshAgent nav;
-
-    protected override Status OnStart()
-    {
-        if (Agent?.Value == null)
-            return Status.Failure;
-
-        nav = Agent.Value.GetComponent<NavMeshAgent>();
-        nav.speed = WalkSpeed;
-        return Status.Running;
-    }
 
     protected override Status OnUpdate()
     {
-        if (AIState.Value != State.Patrol)
-        {
-            nav.ResetPath();
-            return Status.Failure;
-        }
+        if (AIState != null)
+            AIState.Value = State.Patrol;
 
         return Status.Success;
     }

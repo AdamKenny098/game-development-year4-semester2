@@ -23,55 +23,34 @@ public class PatrolStateAction : Action
     private int index;
     private float waitTimer;
     private bool waiting;
+    private bool initialised;
 
     protected override Status OnStart()
     {
         if (Agent == null || Agent.Value == null)
-        {
             return Status.Failure;
-        }
 
         nav = Agent.Value.GetComponent<NavMeshAgent>();
         anim = Agent.Value.GetComponent<Animator>();
 
-        if (nav == null)
-        {
+        if (nav == null || !nav.isOnNavMesh)
             return Status.Failure;
-        }
-
-        if (!nav.isOnNavMesh)
-        {
-            return Status.Failure;
-        }
 
         if (Waypoints == null || Waypoints.Value == null || Waypoints.Value.Count == 0)
-        {
             return Status.Failure;
-        }
 
-        if (AIState != null)
+        if (!initialised)
         {
-            AIState.Value = State.Patrol;
-        }
+            if (startAtNearestPoint)
+                index = GetNearestWaypointIndex();
+            else
+                index = Mathf.Clamp(index, 0, Waypoints.Value.Count - 1);
 
-        waiting = false;
-        waitTimer = 0f;
-        nav.isStopped = false;
+            waiting = false;
+            waitTimer = 0f;
+            initialised = true;
 
-        if (startAtNearestPoint)
-        {
-            index = GetNearestWaypointIndex();
-        }
-        else
-        {
-            index = Mathf.Clamp(index, 0, Waypoints.Value.Count - 1);
-        }
-
-        SetDestinationToCurrentWaypoint();
-
-        if (anim != null)
-        {
-            anim.SetFloat("Speed", 0.5f);
+            SetDestinationToCurrentWaypoint();
         }
 
         return Status.Running;
@@ -79,20 +58,12 @@ public class PatrolStateAction : Action
 
     protected override Status OnUpdate()
     {
-        if (nav == null)
-        {
+        if (nav == null || !nav.isOnNavMesh)
             return Status.Failure;
-        }
 
         if (Waypoints == null || Waypoints.Value == null || Waypoints.Value.Count == 0)
-        {
             return Status.Failure;
-        }
 
-        if (!nav.isOnNavMesh)
-        {
-            return Status.Failure;
-        }
 
         if (waiting)
         {
@@ -104,7 +75,12 @@ public class PatrolStateAction : Action
                 MoveToNextWaypoint();
             }
 
-            return Status.Running;
+            return Status.Success;
+        }
+
+        if (!nav.hasPath && !nav.pathPending)
+        {
+            SetDestinationToCurrentWaypoint();
         }
 
         if (HasReachedDestination())
@@ -115,26 +91,24 @@ public class PatrolStateAction : Action
             nav.isStopped = true;
 
             if (anim != null)
-            {
                 anim.SetFloat("Speed", 0f);
-            }
+
+            return Status.Success;
         }
 
-        return Status.Running;
+        nav.isStopped = false;
+
+        if (anim != null)
+            anim.SetFloat("Speed", nav.velocity.magnitude);
+
+        return Status.Success;
     }
 
     protected override void OnEnd()
     {
-        if (nav != null)
-        {
-            nav.isStopped = true;
-            nav.ResetPath();
-        }
-
-        if (anim != null)
-        {
-            anim.SetFloat("Speed", 0f);
-        }
+        // Intentionally empty.
+        // This action returns Success every tick so the Behaviour Graph can re-evaluate senses.
+        // Do not stop or reset the NavMeshAgent here, or patrol movement will be cancelled every tick.
     }
 
     private void MoveToNextWaypoint()
@@ -145,31 +119,23 @@ public class PatrolStateAction : Action
         SetDestinationToCurrentWaypoint();
 
         if (anim != null)
-        {
             anim.SetFloat("Speed", 0.5f);
-        }
-}
+    }
 
     private void SetDestinationToCurrentWaypoint()
     {
         Vector3 destination = Waypoints.Value[index];
 
         if (NavMesh.SamplePosition(destination, out NavMeshHit hit, 2f, NavMesh.AllAreas))
-        {
             nav.SetDestination(hit.position);
-        }
         else
-        {
             nav.SetDestination(destination);
-        }
     }
 
     private bool HasReachedDestination()
     {
         if (nav.pathPending)
-        {
             return false;
-        }
 
         if (nav.pathStatus == NavMeshPathStatus.PathInvalid)
         {
@@ -178,14 +144,10 @@ public class PatrolStateAction : Action
         }
 
         if (nav.remainingDistance > nav.stoppingDistance)
-        {
             return false;
-        }
 
         if (nav.hasPath && nav.velocity.sqrMagnitude > 0.01f)
-        {
             return false;
-        }
 
         return true;
     }

@@ -9,157 +9,98 @@ using Unity.Properties;
 public partial class CombatSenseAction : Action
 {
     [SerializeReference] public BlackboardVariable<GameObject> Self;
+    [SerializeReference] public BlackboardVariable<GameObject> Player;
     [SerializeReference] public BlackboardVariable<Transform> PlayerTransform;
-    [SerializeReference] public BlackboardVariable<int> AbilitySlot = new(0);
 
-    [SerializeReference] public BlackboardVariable<Transform> CombatTarget;
-    [SerializeReference] public BlackboardVariable<bool> IsAbilityReady;
-    [SerializeReference] public BlackboardVariable<bool> CanAttack;
+    [SerializeReference] public BlackboardVariable<bool> CanSeePlayer;
     [SerializeReference] public BlackboardVariable<bool> IsInRange;
+    [SerializeReference] public BlackboardVariable<bool> CanAttack;
 
-    [Header("Fallbacks")]
-    public float fallbackRange = 2f;
+    [Header("Tyrant Range Settings")]
+    public float attackRange = 3.5f;
+    public bool requireVisionToAttack = false;
 
-    protected override Status OnUpdate()
+    private Transform selfTransform;
+    private Transform playerTransform;
+
+    protected override Status OnStart()
     {
-        if (Self == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
+        if (Self == null || Self.Value == null)
+            return Status.Failure;
 
-        if (Self.Value == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
+        selfTransform = Self.Value.transform;
+        ResolvePlayer();
 
-
-        Entity selfEntity = Self.Value.GetComponent<Entity>();
-        if (selfEntity == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        if (selfEntity.stats == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        if (selfEntity.isDead)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        Transform chosenTarget = PlayerTransform != null ? PlayerTransform.Value : null;
-        if (PlayerTransform == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        if (chosenTarget == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        Entity targetEntity = chosenTarget.GetComponentInParent<Entity>();
-        if (targetEntity == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        if (targetEntity.isDead)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        if (CombatTarget != null)
-        {
-            CombatTarget.Value = chosenTarget;
-        }
-
-        AbilityManager abilityManager = Self.Value.GetComponent<AbilityManager>();
-        if (abilityManager == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        int slot = AbilitySlot != null ? AbilitySlot.Value : 0;
-
-        AbilityData ability = abilityManager.GetAbility(slot);
-        if (ability == null)
-        {
-            SafeFail();
-            return Status.Running;
-        }
-
-        float range = ability.range > 0f ? ability.range : fallbackRange;
-
-        Vector3 selfPos = Self.Value.transform.position;
-        Vector3 targetPos = chosenTarget.position;
-        float distance = Vector3.Distance(selfPos, targetPos);
-
-        bool inRange = distance <= range;
-        bool ready = abilityManager.IsReady(slot);
-        bool finalCanAttack = inRange && ready;
-
-        if (IsAbilityReady != null)
-        {
-            IsAbilityReady.Value = ready;
-        }
-
-        if (CanAttack != null)
-        {
-            CanAttack.Value = finalCanAttack;
-        }
-
-        OverlayBT.Instance?.SetCombat(
-            isInRange: inRange,
-            canAttack: finalCanAttack
-        );
-
-        OverlayBT.Instance?.SetTarget(
-            chosenTarget,
-            hasTarget: chosenTarget != null
-        );
-
-        if (IsInRange != null)
-        {
-            IsInRange.Value = inRange;
-        }
         return Status.Running;
     }
 
-    void SafeFail()
+    protected override Status OnUpdate()
     {
-        if (CombatTarget != null)
-            CombatTarget.Value = null;
+        if (Self == null || Self.Value == null)
+        {
+            SetCombatValues(false, false);
+            return Status.Running;
+        }
 
-        if (IsAbilityReady != null)
-            IsAbilityReady.Value = false;
+        if (selfTransform == null)
+            selfTransform = Self.Value.transform;
 
-        if (CanAttack != null)
-            CanAttack.Value = false;
+        ResolvePlayer();
 
-        if (IsInRange != null)
-            IsInRange.Value = false;
+        if (playerTransform == null)
+        {
+            SetCombatValues(false, false);
+            return Status.Running;
+        }
+
+        float distance = Vector3.Distance(selfTransform.position, playerTransform.position);
+        bool inRange = distance <= attackRange;
+
+        bool hasVision = CanSeePlayer == null || CanSeePlayer.Value;
+        bool canAttack = inRange && (!requireVisionToAttack || hasVision);
+
+        SetCombatValues(inRange, canAttack);
 
         OverlayBT.Instance?.SetCombat(
-            isInRange: false,
-            canAttack: false
+            isInRange: inRange,
+            canAttack: canAttack
         );
 
-        OverlayBT.Instance?.SetTarget(
-            null,
-            hasTarget: false
-        );
+        return Status.Running;
+    }
+
+    private void ResolvePlayer()
+    {
+        if (Player != null && Player.Value != null)
+        {
+            playerTransform = Player.Value.transform;
+
+            if (PlayerTransform != null)
+                PlayerTransform.Value = playerTransform;
+
+            return;
+        }
+
+        GameObject foundPlayer = GameObject.FindGameObjectWithTag("Player");
+
+        if (foundPlayer == null)
+            return;
+
+        playerTransform = foundPlayer.transform;
+
+        if (Player != null)
+            Player.Value = foundPlayer;
+
+        if (PlayerTransform != null)
+            PlayerTransform.Value = playerTransform;
+    }
+
+    private void SetCombatValues(bool inRange, bool canAttack)
+    {
+        if (IsInRange != null)
+            IsInRange.Value = inRange;
+
+        if (CanAttack != null)
+            CanAttack.Value = canAttack;
     }
 }
