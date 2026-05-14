@@ -1,7 +1,248 @@
-# CA3 - Outpost Capture
+# CA3 Projects Repository
+
+Student: Adam Kenny (20102588)  
+Engine: Unity 6  
+Target Platform: Windows PC
+
+This repository contains two CA3 vertical slice projects:
+
+1. **Tyrant AI Vertical Slice** — the current AI-focused project built around a Resident Evil 2-style Tyrant NPC using Unity Behaviour Graph, Blackboard values, NavMesh navigation, perception, state switching, debug overlay, and profiling evidence.
+2. **Outpost Capture** — a multiplayer capture-the-point vertical slice using Photon Fusion 2 Shared Mode, Unity Authentication, Azure authentication proxy, Custom Authentication, a neutral NavMesh guard, rendering polish, and profiling evidence.
+
+---
+
+# Project 1 — Tyrant AI Vertical Slice
+
+Advanced 3D Game Development - CA3 AI Vertical Slice  
+Project: Tyrant AI Vertical Slice  
+Engine: Unity 6  
+Target Platform: Windows PC
+
+---
+
+## 1. Project Overview
+
+The Tyrant AI Vertical Slice is a compact 3D AI demonstration built around a single stalker-style enemy inspired by the Resident Evil 2 Tyrant. The purpose of this vertical slice is to demonstrate a clean, readable, and evidence-backed AI encounter rather than a large game level.
+
+The project focuses on a four-state AI loop:
+
+```text
+Patrol → Search → Chase → Attack
+```
+
+The Tyrant uses repeated sensory checks, Blackboard values, a Brain/state decision layer, Unity Behaviour Graph execution, and NavMeshAgent movement. A custom debug HUD displays live AI state, perception values, target data, combat values, and NavMesh information during gameplay.
+
+The project demonstrates:
+
+- Unity NavMesh-based movement.
+- Behaviour Graph-driven decision-making.
+- Blackboard-based data flow.
+- Vision, hearing, and attack-range sensory checks.
+- A simplified state model: Patrol, Search, Chase, Attack.
+- Debug overlay/HUD support for assessment evidence.
+- Profiler evidence and performance notes.
+- A focused vertical-slice encounter suitable for video demonstration.
+
+---
+
+## 2. Gameplay Loop
+
+The Tyrant encounter follows this loop:
+
+1. The Tyrant patrols through the building using a cyclic waypoint route.
+2. The sensory layer continuously checks for vision, hearing, and attack range.
+3. If the player is heard but not seen, the Tyrant enters Search.
+4. If the player is seen, the Tyrant enters Chase.
+5. If the Tyrant gets close enough, it enters Attack.
+6. If the player escapes or line of sight is broken, the Tyrant searches the last known location.
+7. If the search expires without reacquiring the player, the Tyrant returns to Patrol.
+
+This creates a clear AI demonstration loop:
+
+```text
+Patrol → Search → Chase → Attack → Search → Patrol
+```
+
+---
+
+## 3. Controls
+
+| Input | Action |
+|---|---|
+| WASD | Move player |
+| Mouse | Look / camera control, depending on controller setup |
+| Shift | Sprint, if enabled in the player controller |
+| Move into Tyrant hearing/vision range | Trigger Search or Chase |
+| Move close to Tyrant | Trigger Attack |
+
+---
+
+## 4. Core Features Implemented
+
+### Tyrant AI State System
+
+The AI uses four states:
+
+```csharp
+public enum State
+{
+    Patrol,
+    Search,
+    Chase,
+    Attack
+}
+```
+
+These states are selected by the Behaviour Graph Brain layer using Blackboard values written by the sensory system.
+
+### Sensory System
+
+The Tyrant has three main sensory checks:
+
+- **Vision** — checks distance, field of view, and line of sight.
+- **Hearing** — checks whether the player is within hearing radius.
+- **Combat Sense** — checks whether the player is within attack range.
+
+These systems update Blackboard values such as:
+
+```text
+CanSeePlayer
+HearsNoise
+CanAttack
+IsInRange
+CurrentTarget
+LastKnownPlayerPosition
+LastHeardNoisePosition
+SearchTargetPosition
+State
+```
+
+### Behaviour Graph and Blackboard
+
+The Behaviour Graph is organised into three layers:
+
+```text
+Senses update Blackboard values
+Brain/state logic chooses Patrol, Search, Chase, or Attack
+State actions execute movement or attack behaviour
+```
+
+The graph allows the Tyrant to remain responsive while moving, rather than becoming locked into patrol or chase.
+
+### NavMesh Movement
+
+The Tyrant uses `NavMeshAgent` movement for:
+
+- Cyclic waypoint patrol.
+- Moving to heard noise positions.
+- Searching the last known player position.
+- Chasing the player.
+- Stopping during the attack state.
+
+### Debug HUD
+
+The debug HUD displays:
+
+- Current State.
+- Current Branch / Task.
+- CanSeePlayer.
+- HearsNoise.
+- HasLastKnownPlayerPosition.
+- HasLastHeardNoisePosition.
+- CurrentTarget.
+- LastKnownPlayerPosition.
+- LastHeardNoisePosition.
+- SearchTargetPosition.
+- IsInRange.
+- CanAttack.
+- IsAttacking.
+- NavMesh destination, path status, remaining distance, and stopped state.
+
+This HUD is used as assessment evidence and supports the narrated video demonstration.
+
+---
+
+## 5. Build and Run Instructions
+
+### Requirements
+
+- Unity 6.
+- Unity Behaviour package / Behaviour Graph support.
+- TextMeshPro.
+- Unity NavMesh / AI Navigation support.
+- Universal Render Pipeline, if used by the scene.
+
+### Running in Unity
+
+1. Open the Unity project.
+2. Open the vertical slice scene under `Assets/Scenes/02_VerticalSlice/` or the equivalent CA3 AI scene.
+3. Confirm the Tyrant object is present in the scene.
+4. Confirm the Tyrant has:
+   - `NavMeshAgent`
+   - Behaviour Agent / Behaviour Graph setup
+   - `TyrantOverlayReporter`
+   - Assigned Blackboard variables
+5. Confirm the debug HUD exists in the scene.
+6. Press Play.
+7. Move through the level to trigger Patrol, Search, Chase, and Attack.
+
+---
+
+## 6. Evidence and Profiling
+
+Evidence for the Tyrant AI project should be stored in:
+
+```text
+Docs/Screenshots/
+Docs/ProfilerCaptures/
+```
+
+Recommended screenshots:
+
+```text
+01_patrol_debug_overlay.png
+02_vision_detects_player.png
+03_search_state.png
+04_chase_state.png
+05_attack_state.png
+06_behaviour_graph_overview.png
+```
+
+Profiler captures:
+
+```text
+01_patrol_profiler.png
+02_chase_attack_profiler.png
+ProfilerNotes_Revised.md
+```
+
+The profiler notes explain the observed cost of repeated perception checks, Behaviour Graph state switching, debug HUD updates, NavMesh movement, and attack-state engagement.
+
+---
+
+## 7. Known Limitations
+
+This project is a focused AI vertical slice rather than a full survival horror game. Known limitations include:
+
+- The Tyrant is built as a single assessment-grade NPC rather than a full enemy roster.
+- Attack behaviour is functional but intentionally simple.
+- The debug HUD is assessment-facing and not intended as final player UI.
+- The AI prioritises readability and evidence over complex animation polish.
+- The level uses a controlled vertical-slice layout rather than a full production environment.
+
+---
+
+## 8. Tyrant AI Final Notes
+
+The Tyrant AI project demonstrates a complete and readable AI loop with live debugging and profiling evidence. The focus is on clarity: perception updates Blackboard values, the Brain chooses a state, and the state action performs the relevant NavMesh or attack behaviour.
+
+This makes the implementation suitable for CA3 demonstration because the marker can observe not only what the Tyrant is doing, but also why it is doing it.
+
+---
+
+# Project 2 — Outpost Capture
 
 Advanced 3D Game Development - CA3 Vertical Slice  
-Student: Adam Kenny (20102588)  
 Project: Outpost Capture  
 Engine: Unity 6  
 Networking: Photon Fusion 2, Shared Mode  
